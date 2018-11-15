@@ -1,0 +1,32 @@
+NAME: Jianzhi Liu
+EMAIL: ljzprivate@yahoo.com
+ID: 204742214
+SLIPDAYS: 0
+
+Files:
+	backtrace.png	-- A gdb screenshot of stack backtrace at the segmentation fault specified by --segfault option.
+	breakpoint.png	-- A gdb screenshot of the assignment that gives rise to the segmentation fault.
+	lab0.c		-- Source code of the lab0 program, implementing the specification of Project 0.
+	Makefile	-- A Makefile that supports default, check, clean, and dist options as specified in Project 0.
+
+Smoke-test cases in check:
+	   case 0:
+                Call lab0 with no option and pass a test message to stdin.
+                Check 1) if the process exits with status 0, and
+                      2) if the contents of stdout match those of stdin.
+	   case 00:
+	   	Call lab0 with valid --input and --output options.
+		Check 1) if the process exits with status 0, and
+                      2) if the contents of input match those of output.
+	   case 1:
+	   	Call lab0 with an unrecognized argument.
+		Check if the process exits with status 1.
+	   case 2:
+	   	Call lab0 with an --input filename that does not exists.
+		Check if the process exits with status 2.
+	   case 3:
+	   	Call lab0 with an --output filename that cannot be open.
+                Check if the process exits with status 3.
+	   case 4:
+	   	Call lab0 with --segfault and --catch options.
+                Check if the process exits with status 4.

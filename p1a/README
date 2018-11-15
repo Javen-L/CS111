@@ -1,0 +1,8 @@
+NAME: Jianzhi Liu
+EMAIL: ljzprivate@yahoo.com
+ID: 204742214
+SLIPDAYS: 0
+
+Files:
+	lab1a.c    -- Source code of the lab1a program, implementing the specification of Project 1a.
+	Makefile   -- A Makefile that supports default, clean, and dist options as specified in Project 1a.

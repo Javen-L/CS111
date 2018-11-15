@@ -1,0 +1,90 @@
+NAME: Jianzhi Liu
+EMAIL: ljzprivate@yahoo.com
+ID: 204742214
+SLIPDAYS: 0
+
+Files:
+	lab2_add.c     -- the source code to test a variable shared by multiple threads, implementing --yield and --sync options as specified in project2a, and to store the test results into lab2_add.csv
+	SortedList.h   -- the header file describing the interfaces for linked list operations
+	SortedList.c   -- the C module that implements the inferface specified in SortedList.h
+	lab2_list.c    -- the source code to test a SortedList shared by multiple threads, implementing --yield and --sync options as specified in project2a, and to store the test results into lab2_list.csv
+	Makefile       -- A Makefile that supports build, tests, graphs, clean, and dist options as specified in project2a
+	lab2_add.csv   -- the results of Part-1 tests
+	lab2_list.csv  -- the results of Part-2 tests
+	*.png 	       -- plots for various tests specified in project2a
+	lab2_add.gp    -- the shell script that uses gnuplot to generate plots for Part-1 tests
+	lab2_list.gp   -- the shell script that uses gnuplot to generate plots for Part-2 tests
+	test_add.sh    -- the shell script that runs tests with lab2_add
+	test_list.sh   -- the shell script that runs tests with lab2_list
+
+--QUESTION 2.1.1 - causing conflicts:
+Why does it take many iterations before errors are seen?
+Why does a significantly smaller number of iterations so seldom fail?
+
+--ANSWER 2.1.1
+Observation:
+Run lab2_add with 10 threads for 100, 1000, 10000, and 100000 iterations, respectively. Following are the results:
+    iterations        final count
+       100	         0
+       1000		 126
+       10000		 1324
+       100000		 -25796
+When the number of iterations is small (around 100), the operations can be carried out correctly; when the number of iterations is more than 1000, the operations become incorrect. This conclusion consistently holds in repetition of this experiment.
+Analysis:
+When the number of iterations is small, each thread can finish its workload rather fast. Thus, the previous thread is likely to be done before the next thread starts. There will rarely be two threads updating count simultaneously. So the final result tends to be accurate. This explains why errors only occur for a large number of iterations.
+
+
+
+--QUESTION 2.1.2 - cost of yielding:
+1) Why are the --yield runs so much slower?
+   Where is the additional time going?
+2) Is it possible to get valid per-operation timings if we are using the --yield option?
+   If so, explain how. If not, explain why not.
+
+--ANSWER 2.1.2
+1) Without --yield, the add function of a thread is likely to run until finish without OS interrupt. Given --yield, however, the thread will certainly be interrupted after addition and before updating count. This extra interrupt results in previously avoidable context switch, which is really time-consuming.
+2) It is not possible to get valid per-operation timings with --yield option. Since the program wastes a large portion of total runtime doing context switch, the per-operation timings we got tend to be significantly larger than the actual timings.
+
+
+
+--QUESTION 2.1.3 - measurement errors:
+1) Why does the average cost per operation drop with increasing iterations?
+2) If the cost per iteration is a function of the number of iterations, how do we know how many iterations to run (or what the "correct" cost is)?
+
+--ANSWER 2.1.3
+1) The overhead incurred by creating a thread is fixed, independent of the number of operations. In the test, the total time we captured is the sum of this overhead and the actual time spent on carrying out operations. As the number of operations increases, the constant overhead is distributed among more operations, and thus contributes less to the average cost per operation. Assuming the actual time of each operation remains roughly constant, the average cost per operation is lowered.
+2) Following from the conclusion of 1), as the number of iterations increases, the overhead per operation decreases, and thus our average cost measure approaches the actual time per operation. As long as we increase the number of iterations until our measure becomes stable, the overhead per operation has become unnoticeable and trivial, then we have the "correct" cost.
+
+
+
+---QUESTION 2.1.4 - costs of serialization:
+1) Why do all of the options perform similarly for low numbers of threads?
+2) Why do the three protected operations slow down as the number of threads rises?
+
+--ANSWER 2.1.4
+1) Because when the thread number is small, the cases where two or more threads try to execute the critical section rarely occur. It is only in such cases the unsynchronized version has performance advantages over the synchronized versions: the unsynchronized version allows all threads to execute at the same time, while the synchronized make all threads except one wait in idle. Thus, when thread number is lower, all options perform similarly.
+2) As indicated in 1), when the thread number increases, it is more likely that all except one wait for the execution of critical section.
+
+
+
+---QUESTION 2.2.1 - scalability of Mutex
+1) Compare the variation in time per mutex-protected operation vs the number of threads in Part-1 (adds) and Part-2 (sorted lists).
+2) Comment on the general shapes of the curves, and explain why they have this shape.
+3) Comment on the relative rates of increase and differences in the shapes of the curves, and offer an explanation for these differences.
+
+---ANSWER 2.2.1
+1) The variation in time per mutex-protected operation is lower in Part-1 than in Part-2.
+2) For both Part-1 and Part-2, as the number of threads increases, the time per operation under mutex protection grows. This is due to the fact that a larger number of threads bring about heavier overhead through more frequent context switches and longer waiting time for acquiring a lock.
+3) However, in Part-1, as the number of threads grows, the curve flattens, whereas the curve from Part-2 keeps increaing at an about constant rate. As the number of threads grow, there are two counteracting forces: a) the overhead of creating threads becomes less significant, which reduces time per operation, and b) the waiting time before entering critical section increases, which increases time per operation. In Part-1, a) is commensurable with b), so the curve flattens. In Part-2, since the critical section is heavy-duty, b) overshadows a), so the curve keeps increasing.
+
+
+
+---QUESTION 2.2.2 - scalability of spin locks
+1) Compare the variation in time per protected operation vs the number of threads for list operations protected by Mutex vs Spin locks.
+2) Comment on the general shapes of the curves, and explain why they have this shape.
+3) Comment on the relative rates of increase and differences in the shapes of the curves, and offer an explanation for these differences.
+
+---ANSWER 2.2.2
+1) The variation in time per operation under spin-lock protection is greater than that under mutex protection.
+2) Both curves show an inceasing trend. Two reasons, same as in 2.2.1 2), are more frequent context switches and longer waiting time brought about by increasing thread number
+3) The rate of increase of the spin-lock curve is much greater than that of mutex curve. As thread number goes up, despite that more threads have to wait for a lock for both kinds of protections, such increase is more harmful for spin-lock performance, because whenever a thread is waiting for a spin-lock, it wastes CPU time by spinning idly during its time slice. Mutex will put the thread to sleep instead. Thus, the spin-lock curve increases much faster than the mutex curve.

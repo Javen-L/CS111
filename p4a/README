@@ -1,0 +1,15 @@
+NAME: Jianzhi Liu
+EMAIL: ljzprivate@yahoo.com
+ID: 204742214
+SLIPDAYS: 0
+
+Beaglebone Serial Number: BBGW16062127
+Wifi MAC address: 2c:f7:f1:06:4f:1e
+
+Files:
+	my_beaglebone.jpg    -- A selfie of me with my Beaglebone
+	connected.png        -- A screenshot of the USB terminal command session where the Beaglebone is renamed and connected to Wifi
+	copy.png	     -- A screenshot of Filezilla successfully copying hello.c from my laptop to Beaglebone (connected via Wifi)
+	build_run.png	     -- A screenshot of a Wifi SSH session of Beaglebone where hello.c source code is compiled and executed
+	git.png		     -- A screenshot of a Wifi SSH session of Beaglebone where git is installed and my repo "recsys2018" is cloned
+	Makefile   	     -- A Makefile that builds the tarball as specified in Project 4a

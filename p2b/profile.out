@@ -1,0 +1,213 @@
+Total: 475 samples
+     428  90.1%  90.1%      475 100.0% thread_func
+      35   7.4%  97.5%       35   7.4% __strcmp_sse42
+      10   2.1%  99.6%       31   6.5% SortedList_insert
+       2   0.4% 100.0%       16   3.4% SortedList_lookup
+       0   0.0% 100.0%      475 100.0% __clone
+       0   0.0% 100.0%      475 100.0% start_thread
+ROUTINE ====================== thread_func in /u/eng/class/classjys/cs111/p2b/lab2_list.c
+   428    475 Total samples (flat / cumulative)
+     .      .  107:     printf("%s\n", iter->key);
+     .      .  108:   }
+     .      .  109:   printf("----End\n");
+     .      .  110: }
+     .      .  111: 
+---
+     .      .  112: void *thread_func(void *p) {
+     .      .  113:   int offset = (*((int *) p)) * niters;
+     .      .  114:   int lmt = offset + niters;
+     .      .  115:   int i;
+     .      .  116:   if (DEBUG) printf("[DEBUG] Thread %d got elements[%d:%d]\n", *((int *)p), offset, lmt);
+     .      .  117:   // insert
+     .      .  118:   for (i = offset; i < lmt; i++) {
+     .      .  119:     if (!opt_sync) {
+     .      .  120:       SortedList_insert(list, &elements[i]);
+     .      .  121:     }
+     .      .  122:     else if (sync_type == 'm') {
+     .      .  123:       pthread_mutex_lock(&mutex);
+     .      .  124:       SortedList_insert(list, &elements[i]);
+     .      .  125:       pthread_mutex_unlock(&mutex);
+     .      .  126:     }
+     .      .  127:     else if (sync_type == 's') {
+   334    334  128:       while(__sync_lock_test_and_set(&slock,1))
+     .      .  129: 	; // spin
+     .     31  130:       SortedList_insert(list, &elements[i]);
+     .      .  131:       __sync_lock_release(&slock);
+     .      .  132:     }
+     .      .  133:     //    if (DEBUG) printls();
+     .      .  134:   }
+     .      .  135:   // get length
+     .      .  136:   int len = -1;
+     .      .  137:   if (!opt_sync) {
+     .      .  138:     len = SortedList_length(list);
+     .      .  139:   }
+     .      .  140:   else if (sync_type == 'm') {
+     .      .  141:     pthread_mutex_lock(&mutex);
+     .      .  142:     len = SortedList_length(list);
+     .      .  143:     pthread_mutex_unlock(&mutex);
+     .      .  144:   }
+     .      .  145:   else if (sync_type == 's') {
+     .      .  146:     while(__sync_lock_test_and_set(&slock,1))
+     .      .  147:       ; // spin
+     .      .  148:     len = SortedList_length(list);
+     .      .  149:     __sync_lock_release(&slock);
+     .      .  150:   }
+     .      .  151:   if (len == -1) {
+     .      .  152:     fprintf(stderr, "Something went wrong with list insert/length\n");
+     .      .  153:     exit(2);
+     .      .  154:   }
+     .      .  155:   // look up & delete
+     .      .  156:   for (i = offset; i < lmt; i++) {
+     .      .  157:     if (!opt_sync) {
+     .      .  158:       SortedListElement_t *p = SortedList_lookup(list, elements[i].key);
+     .      .  159:       if (!p) {
+     .      .  160: 	fprintf(stderr, "Something went wrong with list insert/lookup\n");
+     .      .  161: 	exit(2);
+     .      .  162:       }
+     .      .  163:       int rv = SortedList_delete(p);
+     .      .  164:       if (rv == 1) {
+     .      .  165: 	fprintf(stderr, "Something went wrong with list insert/lookup/delete\n");
+     .      .  166: 	exit(2);
+     .      .  167:       }
+     .      .  168:     }
+     .      .  169:     else if (sync_type == 'm') {
+     .      .  170:       pthread_mutex_lock(&mutex);
+     .      .  171:       SortedListElement_t *p = SortedList_lookup(list, elements[i].key);
+     .      .  172:       if (!p) {
+     .      .  173: 	fprintf(stderr, "Something went wrong with list insert/lookup\n");
+     .      .  174: 	exit(2);
+     .      .  175:       }
+     .      .  176:       int rv = SortedList_delete(p);
+     .      .  177:       if (rv == 1) {
+     .      .  178: 	fprintf(stderr, "Something went wrong with list insert/lookup/delete\n");
+     .      .  179: 	exit(2);
+     .      .  180:       }
+     .      .  181:       pthread_mutex_unlock(&mutex);
+     .      .  182:     }
+     .      .  183:     else if (sync_type == 's') {
+    94     94  184:       while(__sync_lock_test_and_set(&slock,1))
+     .      .  185: 	; // spin
+     .     16  186:       SortedListElement_t *p = SortedList_lookup(list, elements[i].key);
+     .      .  187:       if (!p) {
+     .      .  188:         fprintf(stderr, "Something went wrong with list insert/lookup\n");
+     .      .  189:         exit(2);
+     .      .  190:       }
+     .      .  191:       int rv = SortedList_delete(p);
+     .      .  192:       if (rv == 1) {
+     .      .  193:         fprintf(stderr, "Something went wrong with list insert/lookup/delete\n");
+     .      .  194:         exit(2);
+     .      .  195:       }
+     .      .  196:       __sync_lock_release(&slock);
+     .      .  197:     }
+     .      .  198:   }
+     .      .  199:   return NULL;
+     .      .  200: }
+---
+     .      .  201: 
+     .      .  202: int main(int argc, char *argv[]) {
+     .      .  203:   // parsing
+     .      .  204:   char *usage = "lab2_list [--threads=# of threads] [--iterations=# of iterations] [--yield=[idl]]";
+     .      .  205:   static struct option opts[] = {
+ROUTINE ====================== thread_func in /u/eng/class/classjys/cs111/p2b/lab2_list.c
+   428    475 Total samples (flat / cumulative)
+     .      .  107:     printf("%s\n", iter->key);
+     .      .  108:   }
+     .      .  109:   printf("----End\n");
+     .      .  110: }
+     .      .  111: 
+---
+     .      .  112: void *thread_func(void *p) {
+     .      .  113:   int offset = (*((int *) p)) * niters;
+     .      .  114:   int lmt = offset + niters;
+     .      .  115:   int i;
+     .      .  116:   if (DEBUG) printf("[DEBUG] Thread %d got elements[%d:%d]\n", *((int *)p), offset, lmt);
+     .      .  117:   // insert
+     .      .  118:   for (i = offset; i < lmt; i++) {
+     .      .  119:     if (!opt_sync) {
+     .      .  120:       SortedList_insert(list, &elements[i]);
+     .      .  121:     }
+     .      .  122:     else if (sync_type == 'm') {
+     .      .  123:       pthread_mutex_lock(&mutex);
+     .      .  124:       SortedList_insert(list, &elements[i]);
+     .      .  125:       pthread_mutex_unlock(&mutex);
+     .      .  126:     }
+     .      .  127:     else if (sync_type == 's') {
+   334    334  128:       while(__sync_lock_test_and_set(&slock,1))
+     .      .  129: 	; // spin
+     .     31  130:       SortedList_insert(list, &elements[i]);
+     .      .  131:       __sync_lock_release(&slock);
+     .      .  132:     }
+     .      .  133:     //    if (DEBUG) printls();
+     .      .  134:   }
+     .      .  135:   // get length
+     .      .  136:   int len = -1;
+     .      .  137:   if (!opt_sync) {
+     .      .  138:     len = SortedList_length(list);
+     .      .  139:   }
+     .      .  140:   else if (sync_type == 'm') {
+     .      .  141:     pthread_mutex_lock(&mutex);
+     .      .  142:     len = SortedList_length(list);
+     .      .  143:     pthread_mutex_unlock(&mutex);
+     .      .  144:   }
+     .      .  145:   else if (sync_type == 's') {
+     .      .  146:     while(__sync_lock_test_and_set(&slock,1))
+     .      .  147:       ; // spin
+     .      .  148:     len = SortedList_length(list);
+     .      .  149:     __sync_lock_release(&slock);
+     .      .  150:   }
+     .      .  151:   if (len == -1) {
+     .      .  152:     fprintf(stderr, "Something went wrong with list insert/length\n");
+     .      .  153:     exit(2);
+     .      .  154:   }
+     .      .  155:   // look up & delete
+     .      .  156:   for (i = offset; i < lmt; i++) {
+     .      .  157:     if (!opt_sync) {
+     .      .  158:       SortedListElement_t *p = SortedList_lookup(list, elements[i].key);
+     .      .  159:       if (!p) {
+     .      .  160: 	fprintf(stderr, "Something went wrong with list insert/lookup\n");
+     .      .  161: 	exit(2);
+     .      .  162:       }
+     .      .  163:       int rv = SortedList_delete(p);
+     .      .  164:       if (rv == 1) {
+     .      .  165: 	fprintf(stderr, "Something went wrong with list insert/lookup/delete\n");
+     .      .  166: 	exit(2);
+     .      .  167:       }
+     .      .  168:     }
+     .      .  169:     else if (sync_type == 'm') {
+     .      .  170:       pthread_mutex_lock(&mutex);
+     .      .  171:       SortedListElement_t *p = SortedList_lookup(list, elements[i].key);
+     .      .  172:       if (!p) {
+     .      .  173: 	fprintf(stderr, "Something went wrong with list insert/lookup\n");
+     .      .  174: 	exit(2);
+     .      .  175:       }
+     .      .  176:       int rv = SortedList_delete(p);
+     .      .  177:       if (rv == 1) {
+     .      .  178: 	fprintf(stderr, "Something went wrong with list insert/lookup/delete\n");
+     .      .  179: 	exit(2);
+     .      .  180:       }
+     .      .  181:       pthread_mutex_unlock(&mutex);
+     .      .  182:     }
+     .      .  183:     else if (sync_type == 's') {
+    94     94  184:       while(__sync_lock_test_and_set(&slock,1))
+     .      .  185: 	; // spin
+     .     16  186:       SortedListElement_t *p = SortedList_lookup(list, elements[i].key);
+     .      .  187:       if (!p) {
+     .      .  188:         fprintf(stderr, "Something went wrong with list insert/lookup\n");
+     .      .  189:         exit(2);
+     .      .  190:       }
+     .      .  191:       int rv = SortedList_delete(p);
+     .      .  192:       if (rv == 1) {
+     .      .  193:         fprintf(stderr, "Something went wrong with list insert/lookup/delete\n");
+     .      .  194:         exit(2);
+     .      .  195:       }
+     .      .  196:       __sync_lock_release(&slock);
+     .      .  197:     }
+     .      .  198:   }
+     .      .  199:   return NULL;
+     .      .  200: }
+---
+     .      .  201: 
+     .      .  202: int main(int argc, char *argv[]) {
+     .      .  203:   // parsing
+     .      .  204:   char *usage = "lab2_list [--threads=# of threads] [--iterations=# of iterations] [--yield=[idl]]";
+     .      .  205:   static struct option opts[] = {

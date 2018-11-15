@@ -1,0 +1,57 @@
+NAME: Jianzhi Liu
+EMAIL: ljzprivate@yahoo.com
+ID: 204742214
+SLIPDAYS: 0
+
+Files:
+        SortedList.h   -- the header file describing the interfaces for linked list operations
+        SortedList.c   -- the C module that implements the inferface specified in SortedList.h
+        lab2_list.c    -- the source code to test a SortedList shared by multiple threads, implementing options as specified in project2a, and to store the test results into lab2_list.csv
+        Makefile       -- A Makefile that supports build, tests, profile, graphs, clean, and dist options as specified in project2a
+        lab2b_list.csv  -- the results of tests
+	profile.out    -- profiling report showing where time was spent for spin-lock protection in lab2_list.c
+        *.png          -- plots for various tests specified in project2b
+        plot.gp        -- the shell script that uses gnuplot to generate plots for Part-1 tests
+        test.sh        -- the shell script that runs tests with lab2_list
+
+--QUESTION 2.3.1 - CPU time in the basic list implementation:
+1) Where do you believe most of the CPU time is spent in the 1 and 2-thread list tests ?
+2) Why do you believe these to be the most expensive parts of the code?
+3) Where do you believe most of the CPU time is being spent in the high-thread spin-lock tests?
+4) Where do you believe most of the CPU time is being spent in the high-thread mutex tests?
+
+--ANSWER 2.3.1
+1) Most of the CPU time is dedicated to operations on the list, such as insert, look-up, delete and length check.
+2) This is because when the thread number is low, there is not much overhead incurred by thread creation. Also, due to the low thread number, each thread need not spend munc time waiting to acquire the lock. Thus, the time of actual operations on the list dominates.
+3) Most of the CPU time will be spent on the spinning while waiting to acquire the lock.
+4) Most of the CPU time will be spent on the context switches of putting threads to sleep and waking them up.
+
+
+--QUESTION 2.3.2 - Execution Profiling:
+1) Where (what lines of code) are consuming most of the CPU time when the spin-lock version of the list exerciser is run with a large number of threads?
+2) Why does this operation become so expensive with large numbers of threads?
+
+--ANSWER 2.3.2
+1) The lines where the thread spins and waits to acquire a lock comsume most of the CPU time:
+   while(__sync_lock_test_and_set(&slock,1))
+     ; // spin
+2) When there are a large number of threads, the contention for acquired the lock is intense. The average waiting time of a lock is prolonged. Thus many threads have to spin idly, doing nothing but wasting CPU time.
+
+--QUESTION 2.3.3 - Mutex Wait Time:
+Look at the average time per operation (vs. # threads) and the average wait-for-mutex time (vs. #threads).
+1) Why does the average lock-wait time rise so dramatically with the number of contending threads?
+2) Why does the completion time per operation rise (less dramatically) with the number of contending threads?
+3) How is it possible for the wait time per operation to go up faster (or higher) than the completion time per operation?
+--ANSWER 2.3.3
+1) With synchronization, only one thread can be executing the critical section at a certain time, which means all the other threads have to wait. Each of them simultaneously contributes to the total waiting time. If there are n threads, the total wait time increases by (n-1) times of actual wait time. Thus, the average wait time per lock increases a lot.
+2) Despite that, when one threads executes the critical section,  all other threads have to wait, the waiting time is only added once to the total execution time. Thus, the time per operation increases not as much as mutex-wait-time does.
+3) Wait time per operation considers total wait time; time per operation considers total execution time. Total wait time can be greater than total execution time, because each of the waiting threads contributes simultaneously to total wait time.
+
+--QUESTION 2.3.4 - Performance of Partitioned Lists
+1) Explain the change in performance of the synchronized methods as a function of the number of lists.
+2) Should the throughput continue increasing as the number of lists is further increased? If not, explain why not.
+3) It seems reasonable to suggest the throughput of an N-way partitioned list should be equivalent to the throughput of a single list with fewer (1/N) threads. Does this appear to be true in the above curves? If not, explain why not.
+--ANSWER 2.3.4
+1) As the number of lists increases from 1 to 16, the performance continously increases.
+2) The throughput will not keep increasing. If the number of lists is large, the marginal effect of increasing the number of list by 1 becomes insignificant: it will not greatly reduce the average length of lists. Thus, the performance boost brought about by increasing list number will eventually vanish.
+3) It is not true. The N-way partitioned list should have more a higher throughtput than the single list with (1/N) threads. Though the ratio of thread number and the number of simultaneously modifiable lists is the same, the time it takes for the N-way partition list to finish a list operation is much less, due to the reduced search length.
