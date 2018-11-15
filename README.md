@@ -1,4 +1,4 @@
-# CS111
+# CS111, Fall 2018
 | Project | Scores |
 | --- | --- |
 | Project 0  |  88 |
