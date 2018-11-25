@@ -1,0 +1,9 @@
+NAME: Jianzhi Liu, Yinsheng Zhou
+EMAIL: ljzprivate@yahoo.com, jacobzhou@g.ucla.edu
+ID: 204742214, 004817743
+SLIPDAYS: 0
+
+Files:
+	lab3a.c		-- Source code of the lab3a program, which takes one argument, the path of a file system image, and output a summary of some important information of the file system. As required by the specification of project3a.
+	Make		-- A Makefile that supports default, dist, and clean options as specified in project3a.
+	ext2_fs.h	-- A header file that specifies various parameters and class definitions for EXT2 file system, the file system we use for project3a.
