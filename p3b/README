@@ -1,0 +1,11 @@
+NAME: Yinsheng Zhou, Jianzhi Liu
+EMAIL: jacobzhou@g.ucla.edu, ljzprivate@yahoo.com
+ID: 004817743, 204742214
+SLIPDAYS: 0
+
+------Files included-------
+	    README: the file you are reading right now, including information about the files
+	    Makefile: file that build and run the deliverable program, including functionality like default,dist and clean
+	    lab3b.py: the source code containing implementation as specified by the spec
+
+
