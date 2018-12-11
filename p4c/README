@@ -1,0 +1,9 @@
+NAME: Jianzhi Liu
+EMAIL: ljzprivate@yahoo.com
+ID: 204742214
+SLIPDAYS: 0
+
+Files:
+	lab4c_tcp.c    -- Source code for lab4c_tcp, which reads temperature from sensor, communicates with a remote server, and keeps a local log
+	lab4c_tls.c    -- Source code for lab4c_tls, which provides the same services as lab4c_tcp, but uses TLS encryption when communicating with the server
+	Makefile       -- A Makefile that supports default, clean, and dist options as specified in Project 4c
