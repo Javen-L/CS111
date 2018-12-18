@@ -6,8 +6,8 @@
 | Project 1B | 100 |
 | Project 2A |  94 |
 | Project 2B | 100 |
-| Project 3A | N/A |
-| Project 3B | N/A |
+| Project 3A |  87 |
+| Project 3B |  96 |
 | Project 4A | 100 |
-| Project 4B | N\A |
-| Project 4C | N\A |
+| Project 4B | 100 |
+| Project 4C | 100 |
